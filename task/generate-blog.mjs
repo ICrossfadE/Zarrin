@@ -1,0 +1,21 @@
+import fs from 'node:fs';
+const reports = JSON.parse(fs.readFileSync('docs/design-exports/inspection.json', 'utf8').replace(/^\uFEFF/, ''));
+const blog = reports.find(r => r.file === 'Blog page-1.svg');
+const alts = ['Train crossing a bridge through a forest', 'Laptop displaying a food website on a desk', 'Dancer jumping outdoors', 'Singer performing on a stage', 'Man speaking on the phone at his desk', 'Chocolates arranged on pink and white boxes', 'Seaplane beside a tropical island', 'Desktop computer displaying Do More', 'Football resting against a goal net'];
+const titles = blog.texts.filter(t => t.attributes['font-size'] === '24' && t.attributes['font-weight'] === 'bold').sort((a,b) => +a.spans[0].y - +b.spans[0].y || +a.spans[0].x - +b.spans[0].x);
+const records = titles.map((title,index) => {
+ const x=+title.spans[0].x,y=+title.spans[0].y;
+ const rect = blog.shapes.filter(s => s.tag === 'rect' && s.attributes.fill?.startsWith('url') && Math.abs(+s.attributes.x-x)<5 && +s.attributes.y<y).sort((a,b)=>+b.attributes.y - +a.attributes.y)[0];
+ const pattern = rect.attributes.fill.slice(5,-1);
+ const use = blog.shapes.find(s => s.tag === 'use' && s.parent === pattern);
+ const image = blog.images.find(i => i.id === use.attributes['xlink:href'].slice(1));
+ const excerpt = blog.texts.find(t => t.attributes['font-size'] === '16' && Math.abs(+t.spans[0]?.x-x)<5 && +t.spans[0]?.y>y && +t.spans[0]?.y<y+150).text.trim();
+ const category = ['Travel','DEVELOPMENT','Sports'][index%3];
+ return {slug:title.text.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/-$/,''),title:title.text,excerpt,category,publishedAt:category==='Travel'?'2023-03-13':category==='Sports'?'2023-03-10':'2023-03-11',cover:{src:'/images/'+image.file,width:+image.width,height:+image.height,alt:alts[index]},body:[{type:'paragraph',text:excerpt}]};
+});
+const article=reports.find(r => r.file==='Single Blog Page-1.svg');
+const paragraphs=article.texts.filter(t=>t.attributes['font-size']==='16'&&t.text.length>250).sort((a,b)=>+a.spans[0].y - +b.spans[0].y);
+const main={slug:'vr-and-ai-technology',title:article.texts.find(t=>t.attributes['font-size']==='48'&&t.text!=='Popular Post').text,excerpt:paragraphs[0].text.split('\r')[0],category:'DEVELOPMENT',publishedAt:'2023-03-16',cover:{src:'/images/figma-ebf4c500421c.png',width:1424,height:912,alt:'Man exploring virtual reality with a headset and controllers'},body:[...paragraphs[0].text.split(/\r?\n\r?\n/).filter(Boolean).map(text=>({type:'paragraph',text:text.trim()})),{type:'quote',text:article.texts.find(t=>t.attributes['font-size']==='24'&&t.text.startsWith('“')).text,author:'Pedro Domingos'},{type:'paragraph',text:paragraphs[1].text.replace('testers a  that','testers a new set of features that')},{type:'image',src:'/images/figma-edc92e07a436.jpg',alt:'Virtual reality driving simulator',width:1008,height:721},{type:'paragraph',text:paragraphs[2].text}]};
+fs.mkdirSync('src/features/blog',{recursive:true});
+fs.writeFileSync('src/features/blog/mock-posts.ts','import type { Post } from \"./types\";\n\nexport const posts = '+JSON.stringify([main,...records],null,2)+' satisfies Post[];\n');
+console.log(records.map(p=>({slug:p.slug,image:p.cover.src})));

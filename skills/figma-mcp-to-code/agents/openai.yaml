@@ -1,0 +1,6 @@
+interface:
+  display_name: "Figma MCP → код"
+  short_description: "Відтворення Figma в коді проєкту через MCP"
+  default_prompt: "Використай $figma-mcp-to-code, щоб відтворити погоджений Figma-дизайн у поточному проєкті через MCP та перевірити результат за макетом."
+policy:
+  allow_implicit_invocation: true

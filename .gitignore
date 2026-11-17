@@ -10,3 +10,6 @@ next-env.d.ts
 .DS_Store
 Thumbs.db
 /.vercel/
+
+# Локальні необроблені експорти Figma та результати візуальної перевірки (~65 MB).
+/docs/design-exports/
