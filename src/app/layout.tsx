@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { Footer, Header, Newsletter } from "@/components/site-layout";
@@ -11,9 +12,11 @@ export const metadata: Metadata = {
   description: "Zarrin blog website",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  // Дані CMS читаються під час запиту; build не потребує запущеного Strapi.
+  await connection();
   return (
     <html lang="en" className={`${raleway.variable} ${roboto.variable}`}>
       <body><a className="skip-link" href="#main-content">Skip to content</a><Header />{children}<Newsletter /><Footer /></body>

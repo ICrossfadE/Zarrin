@@ -8,9 +8,10 @@ import { MobileNav } from "./mobile-nav";
 export function Logo() {
   return <Link href="/" className="logo" aria-label="Zarrin home"><Image src="/images/logo-mark.svg" alt="" width={44} height={44} /><span>Zarrin</span></Link>;
 }
-export function Header() {
+export async function Header() {
+  const posts = await listPosts();
   return <header className="site-header"><div className="container header-inner"><Logo />
-    <nav className="desktop-nav" aria-label="Main navigation"><Link href="/blog">Blog</Link><Link href="/about">About</Link><Search posts={listPosts().map(({ slug, title }) => ({ slug, title }))} /><Link className="button header-contact" href="/contact">Contact Us</Link></nav>
+    <nav className="desktop-nav" aria-label="Main navigation"><Link href="/blog">Blog</Link><Link href="/about">About</Link><Search posts={posts.map(({ slug, title }) => ({ slug, title }))} /><Link className="button header-contact" href="/contact">Contact Us</Link></nav>
     <MobileNav />
   </div></header>;
 }

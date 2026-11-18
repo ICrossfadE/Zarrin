@@ -16,7 +16,7 @@ export function Search({ posts }: { posts: { slug: string; title: string }[] }) 
       <div className="dialog-heading"><h2 id="search-title">Search articles</h2><button type="button" className="close-search" aria-label="Close search" onClick={() => dialog.current?.close()}>×</button></div>
       <label htmlFor="article-search">Article title</label>
       <input id="article-search" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="What would you like to read?" />
-      <div aria-live="polite" className="search-results">{query.trim() && (results.length ? <ul>{results.map((post) => <li key={post.slug}><Link href={`/blog/${post.slug}`} onClick={() => dialog.current?.close()}>{post.title}</Link></li>)}</ul> : <p>No articles found.</p>)}</div>
+      <div aria-live="polite" className="search-results">{posts.length === 0 ? <p>No posts available right now.</p> : query.trim() && (results.length ? <ul>{results.map((post) => <li key={post.slug}><Link href={`/blog/${post.slug}`} onClick={() => dialog.current?.close()}>{post.title}</Link></li>)}</ul> : <p>No articles found.</p>)}</div>
     </dialog>
   </>;
 }

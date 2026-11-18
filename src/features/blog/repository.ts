@@ -1,8 +1,23 @@
-import { posts } from "./mock-posts";
-// Дані з експортованого макета є локальними прикладами, не редакційною CMS.
-export const listPosts = () => posts;
-export const getPostBySlug = (slug: string) => posts.find((post) => post.slug === slug);
-export const featuredPost = posts[0];
-export const popularPosts = posts.slice(1, 7);
-export const recentPosts = posts.slice(7, 10);
-export const formatDate = (value: string) => new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(value));
+import { getPosts } from "./blog-posts";
+
+export const listPosts = getPosts;
+export const getPostBySlug = async (slug: string) =>
+  (await listPosts()).find((post) => post.slug === slug);
+
+// У CMS поки немає ознак featured/popular: тимчасово вибираємо за датою публікації.
+export async function getPostGroups() {
+  const posts = await listPosts();
+  return {
+    featuredPost: posts[0],
+    popularPosts: posts.slice(0, 6),
+    recentPosts: posts.slice(0, 3),
+  };
+}
+
+export const formatDate = (value: string) =>
+  new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(value));
