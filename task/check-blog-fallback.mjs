@@ -38,6 +38,26 @@ const post = {
   publishedAt: "2026-11-18T00:00:00.000Z", Post_image: null, blog_category: null,
 };
 
+// Перевіряємо URL на межі CMS: вони не повинні ламати завантаження всього блогу.
+for (const [input, expected] of [
+  ["https://www.dropbox.com/scl/fi/abc/photo.jpg?rlkey=key&dl=0", "https://www.dropbox.com/scl/fi/abc/photo.jpg?rlkey=key&raw=1"],
+  ["https://www.dropbox.com/s/abc/photo.jpg?dl=1&raw=0", "https://www.dropbox.com/s/abc/photo.jpg?raw=1"],
+  [" https://cdn.example.com/photo.jpg?size=large ", "https://cdn.example.com/photo.jpg?size=large"],
+  ["https://dl.dropboxusercontent.com/s/abc/photo.jpg", "https://dl.dropboxusercontent.com/s/abc/photo.jpg"],
+  ["/uploads/photo.jpg", "http://cms.test/uploads/photo.jpg"],
+  [null, null], [undefined, null], ["   ", null], ["invalid", null],
+  ["javascript:alert(1)", null], ["//example.com/photo.jpg", null],
+  ["https://user:password@example.com/photo.jpg", null],
+]) {
+  assert.equal(blog.normalizeImageUrl(input), expected);
+}
+const imagePost = blog.toPost({ ...post, image_url: "https://www.dropbox.com/s/abc/photo.jpg?dl=0" });
+assert.equal(imagePost.imageUrl, "https://www.dropbox.com/s/abc/photo.jpg?raw=1");
+assert.equal("cover" in imagePost, false);
+assert.equal(blog.toPost({ ...post, image_url: " ", Post_image: { url: "/uploads/photo.jpg" } }).imageUrl, "http://cms.test/uploads/photo.jpg");
+assert.equal(blog.toPost({ ...post, image_url: "invalid" }).imageUrl, null);
+console.log("PASS imageUrl: Dropbox raw/rlkey, direct and relative URLs, missing/invalid values, media fallback");
+
 for (const [name, handler] of [
   ["connection refused", () => { throw new TypeError("fetch failed"); }],
   ["timeout", () => { throw new DOMException("Timed out", "TimeoutError"); }],

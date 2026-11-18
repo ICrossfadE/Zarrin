@@ -2,6 +2,26 @@ import { cache } from "react";
 import { fetchAPI, getStrapiURL } from "@/lib/api";
 import type { Post, StrapiPost, StrapiPostsResponse } from "./types";
 
+export function normalizeImageUrl(value: string | null | undefined): string | null {
+  const source = value?.trim();
+  if (!source) return null;
+  try {
+    const url = source.startsWith("/") && !source.startsWith("//")
+      ? new URL(getStrapiURL(source))
+      : new URL(source);
+    if (!["http:", "https:"].includes(url.protocol) || url.username || url.password) return null;
+    // Share URL відкриває HTML-перегляд; raw=1 повертає файл, rlkey лишається незмінним.
+    if (["dropbox.com", "www.dropbox.com"].includes(url.hostname) &&
+        /^\/(?:s\/[^/]+\/|scl\/fi\/[^/]+\/)/.test(url.pathname)) {
+      url.searchParams.delete("dl");
+      url.searchParams.set("raw", "1");
+    }
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
 export function toPost(item: StrapiPost): Post {
   if (item.Post_text !== null && typeof item.Post_text !== "string") {
     throw new Error(
@@ -17,14 +37,8 @@ export function toPost(item: StrapiPost): Post {
     excerpt: item.Short_description?.trim() ?? "",
     category: item.blog_category?.Name ?? "",
     publishedAt: item.Post_date ?? item.publishedAt,
-    cover: item.Post_image
-      ? {
-          src: getStrapiURL(item.Post_image.url),
-          alt: item.Post_image.alternativeText ?? item.Title,
-          width: item.Post_image.width,
-          height: item.Post_image.height,
-        }
-      : null,
+    imageUrl: normalizeImageUrl(item.image_url?.trim() || item.Post_image?.url),
+    sortOrder: item.sortOrder ?? null,
     // Post_text наразі null; підтримуємо plain text без виконання HTML із CMS.
     body: (item.Post_text ?? "")
       .split(/\r?\n\s*\r?\n/)
